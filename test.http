@@ -1,0 +1,30 @@
+@base_url = http://127.0.0.1:1977
+
+### 1. Rota Teste
+GET {{base_url}} 
+
+
+### 2. Create Game Fixed
+POST  {{base_url}}/fixed 
+Content-Type: application/json
+
+{
+    "number": 3831
+}
+
+
+### 3. UPDATE Game Fixed
+PUT   {{base_url}}/fixed/3832 
+Content-Type: application/json
+
+{
+    "correct": 8,
+    "correctNumbers": [2, 9, 10, 15, 19, 20, 22, 24]
+}
+
+### 4. GET Game Fixed
+GET   {{base_url}}/fixed/3830
+
+
+### 5. GET ALL Game Fixed
+GET   {{base_url}}/fixed/all
