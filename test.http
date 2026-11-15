@@ -9,12 +9,12 @@ POST  {{base_url}}/fixed
 Content-Type: application/json
 
 {
-    "number": 3832
+    "number": 3831
 }
 
 
 ### 3. UPDATE Game Fixed
-PUT   {{base_url}}/fixed/3832 
+PUT   {{base_url}}/fixed/3831 
 Content-Type: application/json
 
 {
@@ -35,7 +35,7 @@ POST  {{base_url}}/frequency
 Content-Type: application/json
 
 {
-    "number": 3832
+    "number": 3831
 }
 
 
@@ -55,3 +55,30 @@ GET   {{base_url}}/fixed/3836
 
 ### 9. GET ALL Game Frequency
 GET   {{base_url}}/frequency/all
+
+
+### 10. Create Game Random
+POST  {{base_url}}/random 
+Content-Type: application/json
+
+{
+    "number": 3831
+}
+
+
+### 11. UPDATE Game Random
+PUT   {{base_url}}/random/3833 
+Content-Type: application/json
+
+{
+    "correct": 15,
+    "correctNumbers": [1, 2, 9, 10, 15, 19, 20, 22, 24, 25]
+}
+
+
+### 12. GET Game Random
+GET   {{base_url}}/random/3833
+
+
+### 13. GET ALL Game Random
+GET   {{base_url}}/random/all

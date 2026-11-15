@@ -48,4 +48,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /frequency/{number}", s.handler.GetGameFrequency)
 	s.mux.HandleFunc("GET /frequency/all", s.handler.GetAllGamesFrequency)
 
+	s.mux.HandleFunc("POST /random", s.handler.CreateNewGameRandom)
+	s.mux.HandleFunc("PUT /random/{number}", s.handler.UpdateGameRandom)
+	s.mux.HandleFunc("GET /random/{number}", s.handler.GetGameRandom)
+	s.mux.HandleFunc("GET /random/all", s.handler.GetAllGamesRandom)
 }

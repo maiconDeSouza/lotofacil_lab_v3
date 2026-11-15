@@ -20,6 +20,10 @@ type ServiceInterface interface {
 	UpdateGameFrequency(number int, up model.RequestUpdateGame) (*model.Game, *errapp.ErrAppRes)
 	GetGameFrequency(number int) (*model.Game, *errapp.ErrAppRes)
 	GetAllGamesFrequency() ([]model.Game, *errapp.ErrAppRes)
+	CreateNewGameRandom(n int) (*model.Game, *errapp.ErrAppRes)
+	UpdateGameRandom(number int, up model.RequestUpdateGame) (*model.Game, *errapp.ErrAppRes)
+	GetGameRandom(number int) (*model.Game, *errapp.ErrAppRes)
+	GetAllGamesRandom() ([]model.Game, *errapp.ErrAppRes)
 }
 
 type Service struct {
@@ -210,13 +214,91 @@ func (s *Service) GetAllGamesFrequency() ([]model.Game, *errapp.ErrAppRes) {
 		return nil, errAppRes
 	}
 
-	gamersFixed := []model.Game{}
+	gamersFrequency := []model.Game{}
 
 	for _, v := range *gamers {
 		if v.TypeStrategy == model.StrategyFrequency {
-			gamersFixed = append(gamersFixed, v)
+			gamersFrequency = append(gamersFrequency, v)
 		}
 	}
 
-	return gamersFixed, nil
+	return gamersFrequency, nil
+}
+
+func (s *Service) CreateNewGameRandom(n int) (*model.Game, *errapp.ErrAppRes) {
+	g := &model.Game{
+		Number:       n,
+		Numbers:      s.lottery.GenerateLotofacilNumbers15(),
+		TypeStrategy: model.StrategyRandom,
+		Createad:     time.Now(),
+	}
+
+	if err := s.repoGame.Insert(g); err != nil {
+		errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+
+	return g, nil
+}
+
+func (s *Service) UpdateGameRandom(number int, up model.RequestUpdateGame) (*model.Game, *errapp.ErrAppRes) {
+	g := &model.Game{}
+
+	if err := s.repoGame.Update(number, model.StrategyRandom, up.Correct, up.CorrectNumbers); err != nil {
+		if errors.Is(err, errapp.ErrNoDocuments) {
+			errAppRes := errapp.NewErrAppRes(err, errapp.ErrNoDocuments.Error(), http.StatusBadRequest)
+			return nil, errAppRes
+		}
+		errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+
+	if err := s.repoGame.Find(number, model.StrategyRandom, g); err != nil {
+		if errors.Is(err, errapp.ErrNoDocuments) {
+			errAppRes := errapp.NewErrAppRes(err, errapp.ErrNoDocuments.Error(), http.StatusBadRequest)
+			return nil, errAppRes
+		}
+		errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+
+	return g, nil
+}
+
+func (s *Service) GetGameRandom(number int) (*model.Game, *errapp.ErrAppRes) {
+	g := &model.Game{}
+
+	if err := s.repoGame.Find(number, model.StrategyRandom, g); err != nil {
+		if errors.Is(err, errapp.ErrNoDocuments) {
+			errAppRes := errapp.NewErrAppRes(err, errapp.ErrNoDocuments.Error(), http.StatusBadRequest)
+			return nil, errAppRes
+		}
+		errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+
+	return g, nil
+}
+
+func (s *Service) GetAllGamesRandom() ([]model.Game, *errapp.ErrAppRes) {
+	gamers := &[]model.Game{}
+
+	if err := s.repoGame.FindAll(gamers); err != nil {
+		if errors.Is(err, errapp.ErrNoDocuments) {
+			errAppRes := errapp.NewErrAppRes(err, errapp.ErrNoDocuments.Error(), http.StatusBadRequest)
+			return nil, errAppRes
+		}
+		errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+
+	gamersRandom := []model.Game{}
+
+	for _, v := range *gamers {
+		if v.TypeStrategy == model.StrategyRandom {
+			gamersRandom = append(gamersRandom, v)
+		}
+	}
+
+	return gamersRandom, nil
 }
