@@ -21,6 +21,21 @@ type Game struct {
 	Createad       time.Time    `bson:"criadoEm" json:"criadoEm"`
 }
 
+type RequestCaixa struct {
+	Numero       int      `bson:"numero" json:"numero"`
+	ListaDezenas []string `bson:"listaDezenas" json:"listaDezenas"`
+}
+
+type DezFrequency struct {
+	Numero     string `json:"numero"`
+	Quantidade int    `json:"quantidade"`
+}
+
+type ResultFrequency struct {
+	Palpite []int          `json:"palpite"`
+	Ranking []DezFrequency `json:"ranking"`
+}
+
 type TypeGame struct {
 	Name  TypeStrategy `bson:"name" json:"name"`
 	Score int          `bson:"score" json:"score"`
@@ -41,4 +56,9 @@ type RequestGame struct {
 type RequestUpdateGame struct {
 	Correct        int     `json:"correct"`
 	CorrectNumbers Numbers `json:"correctNumbers"`
+}
+
+type ResponseGameFrequency struct {
+	Game      Game           `json:"game"`
+	Frequency []DezFrequency `jsonj:"frquency"`
 }

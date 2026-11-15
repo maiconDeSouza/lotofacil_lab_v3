@@ -17,6 +17,10 @@ type HandlerInterface interface {
 	UpdateGameFixed(w http.ResponseWriter, r *http.Request)
 	GetGameFixed(w http.ResponseWriter, r *http.Request)
 	GetAllGamesFixed(w http.ResponseWriter, r *http.Request)
+	CreateNewGameFrequency(w http.ResponseWriter, r *http.Request)
+	UpdateGameFrequency(w http.ResponseWriter, r *http.Request)
+	GetGameFrequency(w http.ResponseWriter, r *http.Request)
+	GetAllGamesFrequency(w http.ResponseWriter, r *http.Request)
 }
 
 type Handler struct {
@@ -127,6 +131,115 @@ func (h *Handler) GetAllGamesFixed(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	gamers, errAppRes := h.service.GetAllGamesFixed()
+	if errAppRes != nil {
+		if errAppRes.Code == 0 {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(errAppRes)
+			return
+		}
+		w.WriteHeader(errAppRes.Code)
+		json.NewEncoder(w).Encode(errAppRes)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(gamers)
+}
+
+func (h *Handler) CreateNewGameFrequency(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	n := model.RequestGame{}
+
+	if err := json.NewDecoder(r.Body).Decode(&n); err != nil {
+		errAppRes := errapp.NewErrAppRes(err, "Problema na hora de processar o JSON", http.StatusBadRequest)
+		w.WriteHeader(errAppRes.Code)
+		json.NewEncoder(w).Encode(errAppRes)
+		return
+	}
+
+	g, errAppRes := h.service.CreateNewGameFrequency(n.Number)
+	if errAppRes != nil {
+		if errAppRes.Code == 0 {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(errAppRes)
+			return
+		}
+		w.WriteHeader(errAppRes.Code)
+		json.NewEncoder(w).Encode(errAppRes)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(g)
+}
+
+func (h *Handler) UpdateGameFrequency(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	s := r.PathValue("number")
+	number, err := strconv.Atoi(s)
+	if err != nil {
+		errAppRes := errapp.NewErrAppRes(err, "Parametro tem quer ser um número", http.StatusBadRequest)
+		w.WriteHeader(errAppRes.Code)
+		json.NewEncoder(w).Encode(errAppRes)
+		return
+	}
+
+	up := model.RequestUpdateGame{}
+
+	if err := json.NewDecoder(r.Body).Decode(&up); err != nil {
+		errAppRes := errapp.NewErrAppRes(err, "Problema na hora de processar o JSON", http.StatusBadRequest)
+		w.WriteHeader(errAppRes.Code)
+		json.NewEncoder(w).Encode(errAppRes)
+		return
+	}
+
+	g, errAppRes := h.service.UpdateGameFrequency(number, up)
+	if errAppRes != nil {
+		if errAppRes.Code == 0 {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(errAppRes)
+			return
+		}
+		w.WriteHeader(errAppRes.Code)
+		json.NewEncoder(w).Encode(errAppRes)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(g)
+}
+
+func (h *Handler) GetGameFrequency(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	s := r.PathValue("number")
+	number, err := strconv.Atoi(s)
+	if err != nil {
+		errAppRes := errapp.NewErrAppRes(err, "Parametro tem quer ser um número", http.StatusBadRequest)
+		w.WriteHeader(errAppRes.Code)
+		json.NewEncoder(w).Encode(errAppRes)
+		return
+	}
+
+	g, errAppRes := h.service.GetGameFrequency(number)
+	if errAppRes != nil {
+		if errAppRes.Code == 0 {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(errAppRes)
+			return
+		}
+		w.WriteHeader(errAppRes.Code)
+		json.NewEncoder(w).Encode(errAppRes)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(g)
+}
+
+func (h *Handler) GetAllGamesFrequency(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	gamers, errAppRes := h.service.GetAllGamesFrequency()
 	if errAppRes != nil {
 		if errAppRes.Code == 0 {
 			w.WriteHeader(http.StatusInternalServerError)

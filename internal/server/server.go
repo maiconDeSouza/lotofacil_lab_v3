@@ -43,4 +43,9 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /fixed/{number}", s.handler.GetGameFixed)
 	s.mux.HandleFunc("GET /fixed/all", s.handler.GetAllGamesFixed)
 
+	s.mux.HandleFunc("POST /frequency", s.handler.CreateNewGameFrequency)
+	s.mux.HandleFunc("PUT /frequency/{number}", s.handler.UpdateGameFrequency)
+	s.mux.HandleFunc("GET /frequency/{number}", s.handler.GetGameFrequency)
+	s.mux.HandleFunc("GET /frequency/all", s.handler.GetAllGamesFrequency)
+
 }
