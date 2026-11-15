@@ -1,8 +1,11 @@
 package service
 
 import (
+	"cmp"
 	"errors"
 	"net/http"
+	"slices"
+	"strconv"
 	"time"
 
 	"github.com/maiconDeSouza/lotofacil_lab_v3/internal/errapp"
@@ -24,6 +27,8 @@ type ServiceInterface interface {
 	UpdateGameRandom(number int, up model.RequestUpdateGame) (*model.Game, *errapp.ErrAppRes)
 	GetGameRandom(number int) (*model.Game, *errapp.ErrAppRes)
 	GetAllGamesRandom() ([]model.Game, *errapp.ErrAppRes)
+	UpdateScored(up *model.Scored) (*model.Scored, *errapp.ErrAppRes)
+	ConfirmResult(n int) (*model.ResponseConfirmResult, *errapp.ErrAppRes)
 }
 
 type Service struct {
@@ -301,4 +306,134 @@ func (s *Service) GetAllGamesRandom() ([]model.Game, *errapp.ErrAppRes) {
 	}
 
 	return gamersRandom, nil
+}
+
+func (s *Service) UpdateScored(up *model.Scored) (*model.Scored, *errapp.ErrAppRes) {
+	sc := &model.Scored{}
+
+	if err := s.repoScored.Find(sc); err != nil {
+		if errors.Is(err, errapp.ErrNoDocuments) {
+			errAppRes := errapp.NewErrAppRes(err, errapp.ErrNoDocuments.Error(), http.StatusBadRequest)
+			return nil, errAppRes
+		}
+		errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+
+	for i := range sc.Scores {
+		if sc.Scores[i].Name == up.Scores[i].Name {
+			sc.Scores[i].Score = sc.Scores[i].Score + up.Scores[i].Score
+		}
+	}
+
+	if err := s.repoScored.Update(sc); err != nil {
+		if errors.Is(err, errapp.ErrNoDocuments) {
+			errAppRes := errapp.NewErrAppRes(err, errapp.ErrNoDocuments.Error(), http.StatusBadRequest)
+			return nil, errAppRes
+		}
+		errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+	return sc, nil
+}
+
+func (s *Service) ConfirmResult(n int) (*model.ResponseConfirmResult, *errapp.ErrAppRes) {
+	contest, errAppRes := s.lottery.GetNumberContest(n)
+	if errAppRes != nil {
+		return nil, errAppRes
+	}
+
+	gamers := &[]model.Game{}
+
+	if err := s.repoGame.FindByNumber(n, gamers); err != nil {
+		if errors.Is(err, errapp.ErrNoDocuments) {
+			errAppRes := errapp.NewErrAppRes(err, errapp.ErrNoDocuments.Error(), http.StatusBadRequest)
+			return nil, errAppRes
+		}
+		errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+
+	contestSystem := model.RequestCaixaSystem{
+		Numero: contest.Numero,
+	}
+
+	for _, v := range contest.ListaDezenas {
+		nInt, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, errapp.NewErrAppRes(err, "Erro a converter string em int", 0)
+		}
+		contestSystem.ListaDezenas = append(contestSystem.ListaDezenas, nInt)
+	}
+
+	for _, v := range contestSystem.ListaDezenas {
+		for _, g := range *gamers {
+			for _, gn := range g.Numbers {
+				if gn == v {
+					g.Correct++
+					g.CorrectNumbers = append(g.CorrectNumbers, v)
+				}
+			}
+		}
+	}
+
+	for _, g := range *gamers {
+		if err := s.repoGame.Update(g.Number, g.TypeStrategy, g.Correct, g.CorrectNumbers); err != nil {
+			if errors.Is(err, errapp.ErrNoDocuments) {
+				errAppRes := errapp.NewErrAppRes(err, errapp.ErrNoDocuments.Error(), http.StatusBadRequest)
+				return nil, errAppRes
+			}
+			errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+			return nil, errAppRes
+		}
+	}
+
+	slices.SortFunc(*gamers, func(a, b model.Game) int {
+		if a.Correct != b.Correct {
+			return cmp.Compare(b.Correct, a.Correct)
+		}
+		return cmp.Compare(b.Number, a.Number)
+	})
+
+	if len(*gamers) != 3 {
+		errAppRes := errapp.NewErrAppRes(nil, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+
+	sc := &model.Scored{}
+	if err := s.repoScored.Find(sc); err != nil {
+		if errors.Is(err, errapp.ErrNoDocuments) {
+			errAppRes := errapp.NewErrAppRes(err, errapp.ErrNoDocuments.Error(), http.StatusBadRequest)
+			return nil, errAppRes
+		}
+		errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+
+	for i, v := range *gamers {
+		if i == 0 {
+			for in, s := range sc.Scores {
+				if v.TypeStrategy == s.Name {
+					sc.Scores[in].Score++
+				}
+			}
+		}
+	}
+
+	if err := s.repoScored.Update(sc); err != nil {
+		if errors.Is(err, errapp.ErrNoDocuments) {
+			errAppRes := errapp.NewErrAppRes(err, errapp.ErrNoDocuments.Error(), http.StatusBadRequest)
+			return nil, errAppRes
+		}
+		errAppRes := errapp.NewErrAppRes(err, "Erro no servidor", http.StatusInternalServerError)
+		return nil, errAppRes
+	}
+
+	rc := &model.ResponseConfirmResult{
+		Gamers: *gamers,
+		Scores: sc.Scores,
+	}
+
+	return rc, nil
+
 }

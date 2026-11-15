@@ -82,3 +82,28 @@ GET   {{base_url}}/random/3833
 
 ### 13. GET ALL Game Random
 GET   {{base_url}}/random/all
+
+
+### 14. UPDATE Scored
+PUT   {{base_url}}/scored
+Content-Type: application/json
+
+{
+  "scores": [
+    {
+      "name": "fixed",
+      "score": 0
+    },
+    {
+      "name": "frequency",
+      "score": 0
+    },
+    {
+      "name": "random",
+      "score": 0
+    }
+  ]
+}
+
+### 15. GET Game Random
+GET   {{base_url}}/result/3833

@@ -26,6 +26,11 @@ type RequestCaixa struct {
 	ListaDezenas []string `bson:"listaDezenas" json:"listaDezenas"`
 }
 
+type RequestCaixaSystem struct {
+	Numero       int   `bson:"numero" json:"numero"`
+	ListaDezenas []int `bson:"listaDezenas" json:"listaDezenas"`
+}
+
 type DezFrequency struct {
 	Numero     string `json:"numero"`
 	Quantidade int    `json:"quantidade"`
@@ -61,4 +66,9 @@ type RequestUpdateGame struct {
 type ResponseGameFrequency struct {
 	Game      Game           `json:"game"`
 	Frequency []DezFrequency `jsonj:"frquency"`
+}
+
+type ResponseConfirmResult struct {
+	Gamers []Game     `json:"gamers"`
+	Scores []TypeGame `json:"scores"`
 }

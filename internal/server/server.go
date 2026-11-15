@@ -52,4 +52,9 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("PUT /random/{number}", s.handler.UpdateGameRandom)
 	s.mux.HandleFunc("GET /random/{number}", s.handler.GetGameRandom)
 	s.mux.HandleFunc("GET /random/all", s.handler.GetAllGamesRandom)
+
+	s.mux.HandleFunc("PUT /scored", s.handler.UpdateScored)
+
+	s.mux.HandleFunc("GET /result/{number}", s.handler.ConfirmResult)
+
 }

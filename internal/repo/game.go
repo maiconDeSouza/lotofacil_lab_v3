@@ -17,6 +17,7 @@ type GameRepoInterface interface {
 	Update(number int, strategy model.TypeStrategy, correct int, correctNumbers model.Numbers) error
 	Find(number int, strategy model.TypeStrategy, game *model.Game) error
 	FindAll(games *[]model.Game) error
+	FindByNumber(n int, gamers *[]model.Game) error
 }
 
 type GameRepo struct {
@@ -96,5 +97,20 @@ func (g *GameRepo) FindAll(gamers *[]model.Game) error {
 		return errapp.ErrNoDocuments
 	}
 
+	return nil
+}
+
+func (g *GameRepo) FindByNumber(n int, gamers *[]model.Game) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(5)*time.Second)
+	defer cancel()
+
+	filter := bson.M{"number": n}
+	err := g.colletion.FindOne(ctx, filter).Decode(gamers)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return errapp.ErrNoDocuments
+		}
+		return err
+	}
 	return nil
 }
